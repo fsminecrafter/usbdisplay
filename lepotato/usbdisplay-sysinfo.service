@@ -1,0 +1,16 @@
+# Optional: show the live status page on the display at boot.
+#   sudo cp usbdisplay.py /usr/local/bin/usbdisplay && sudo chmod +x /usr/local/bin/usbdisplay
+#   sudo cp usbdisplay-sysinfo.service /etc/systemd/system/
+#   sudo systemctl enable --now usbdisplay-sysinfo
+[Unit]
+Description=Show system info on the Pico USB display
+After=dev-ttyACM0.device
+BindsTo=dev-ttyACM0.device
+
+[Service]
+ExecStart=/usr/local/bin/usbdisplay --sysinfo --interval 5
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,32 @@
+# Mirror tty1 onto the Pico USB display, starting at boot.
+#
+#   ./setup.sh          (builds the C program, installs it and this unit, enables the service)
+#
+# by hand:
+#   ./build.sh && sudo install -m 755 build/usbdisplay-tty /usr/local/bin/usbdisplay-tty
+#   sudo cp usbdisplay-tty.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#   sudo systemctl disable --now usbdisplay-sysinfo   # only one program may own the port
+#   sudo systemctl enable --now usbdisplay-tty
+#
+#   journalctl -u usbdisplay-tty -f                   # logs
+#
+# Frame rate is dynamic: 2 fps when nothing changes, 24 fps when something changes, 30 fps when a lot
+# changes. Tune it with e.g.  ExecStart=/usr/local/bin/usbdisplay-tty --tty 1 --fps-mid 20 -v
+[Unit]
+Description=Mirror tty1 to the Pico USB display
+Documentation=file:///usr/local/bin/usbdisplay-tty
+After=systemd-udevd.service systemd-vconsole-setup.service
+Conflicts=usbdisplay-sysinfo.service
+
+[Service]
+Type=simple
+# The program waits for the Pico to appear and reconnects if it is unplugged.
+ExecStart=/usr/local/bin/usbdisplay-tty --tty 1
+Restart=always
+RestartSec=2
+# Needs root: reads /dev/vcsa1 and resizes the console to the display (80x30).
+User=root
+Nice=5
+
+[Install]
+WantedBy=multi-user.target
